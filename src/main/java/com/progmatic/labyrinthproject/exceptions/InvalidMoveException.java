@@ -6,4 +6,9 @@ package com.progmatic.labyrinthproject.exceptions;
  */
 public class InvalidMoveException extends Exception {
 
+    @Override
+    public String getMessage(){
+        return "You can't go that way.";
+    }
+
 }
