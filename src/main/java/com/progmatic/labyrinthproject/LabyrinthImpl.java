@@ -16,10 +16,29 @@ import java.util.Scanner;
  * @author pappgergely
  */
 public class LabyrinthImpl implements Labyrinth {
-    private CellType[][] labyrinth;
-    private Coordinate playerPosition;
+    CellType[][] labyrinth;
+    Coordinate playerPosition;
 
     public LabyrinthImpl() {
+    }
+
+    public static void main(String[] args) throws CellException {
+        LabyrinthImpl l = new LabyrinthImpl();
+        l.loadLabyrinthFile("labyrinth1.txt");
+        System.out.println("a játékos poz. oszlopszáma: " + l.getPlayerPosition().getCol());
+        System.out.println("a játékos poz. sorszáma: " + l.getPlayerPosition().getRow());
+        System.out.println("l szélessége: " + l.getWidth());
+        System.out.println("l magassága: " + l.getHeight());
+        Coordinate c1 = new Coordinate(0, 1);
+        System.out.println(l.getCellType(c1));
+        Coordinate c2 = new Coordinate(2, 3);
+        System.out.println(l.getCellType(c2));
+        Coordinate c3 = new Coordinate(3, 3);
+        l.setCellType(c3, CellType.WALL);
+        System.out.println(l.getCellType(c3));
+        l.playerPosition = c2;
+        System.out.println(l.hasPlayerFinished());
+        System.out.println(l.possibleMoves());
     }
 
     @Override
@@ -32,7 +51,6 @@ public class LabyrinthImpl implements Labyrinth {
             for (int hh = 0; hh < height; hh++) {
                 String line = sc.nextLine();
                 for (int ww = 0; ww < width; ww++) {
-                    Coordinate c = new Coordinate(height, width);
                     switch (line.charAt(ww)) {
                         case 'W':
                             labyrinth[hh][ww] = CellType.WALL;
@@ -42,7 +60,7 @@ public class LabyrinthImpl implements Labyrinth {
                             break;
                         case 'S':
                             labyrinth[hh][ww] = CellType.START;
-                            playerPosition = c;
+                            playerPosition = new Coordinate(ww, hh);
                             break;
                         default:
                             labyrinth[hh][ww] = CellType.EMPTY;
@@ -89,10 +107,10 @@ public class LabyrinthImpl implements Labyrinth {
     @Override
     public void setCellType(Coordinate c, CellType type) throws CellException {
         try {
+            if (type == CellType.START) {
+                playerPosition = c;
+            }
             labyrinth[c.getRow()][c.getCol()] = type;
-//            if (type == CellType.START) {
-//                this.playerPosition = c;
-//            }
         } catch (Exception e) {
             throw new CellException(c.getRow(), c.getCol(), "Coordinate is out of the labyrinth's range.");
         }
@@ -105,7 +123,7 @@ public class LabyrinthImpl implements Labyrinth {
 
     @Override
     public boolean hasPlayerFinished() {
-        if (labyrinth[playerPosition.getRow()][playerPosition.getCol()] == CellType.END) {
+        if (labyrinth[getPlayerPosition().getRow()][getPlayerPosition().getCol()] == CellType.END) {
             return true;
         }
         return false;
@@ -114,25 +132,28 @@ public class LabyrinthImpl implements Labyrinth {
     @Override
     public List<Direction> possibleMoves() {
         List<Direction> list = new ArrayList<>();
-        Coordinate pp = new Coordinate(playerPosition.getRow(), playerPosition.getCol());
-        if (pp.getRow() > 0 && labyrinth[pp.getRow() - 1][pp.getCol()] != CellType.WALL) {
-            list.add(Direction.NORTH);
-        }
-        if (pp.getRow() < labyrinth.length - 1 && labyrinth[pp.getRow() + 1][pp.getCol()] != CellType.WALL) {
-            list.add(Direction.SOUTH);
-        }
-        if (pp.getCol() > 0 && labyrinth[pp.getRow()][pp.getCol() - 1] != CellType.WALL) {
-            list.add(Direction.WEST);
-        }
-        if (pp.getRow() < labyrinth[0].length - 1 && labyrinth[pp.getRow()][pp.getCol() + 1] != CellType.WALL) {
-            list.add(Direction.EAST);
+        Coordinate pp = new Coordinate(getPlayerPosition().getCol(), getPlayerPosition().getRow());
+        if (hasPlayerFinished()) {
+            return list;
+        } else {
+            if (pp.getRow() > 0 && labyrinth[pp.getRow() - 1][pp.getCol()] != CellType.WALL) {
+                list.add(Direction.NORTH);
+            }
+            if (pp.getRow() < labyrinth.length - 1 && labyrinth[pp.getRow() + 1][pp.getCol()] != CellType.WALL) {
+                list.add(Direction.SOUTH);
+            }
+            if (pp.getCol() > 0 && labyrinth[pp.getRow()][pp.getCol() - 1] != CellType.WALL) {
+                list.add(Direction.WEST);
+            }
+            if (pp.getRow() < labyrinth[0].length - 1 && labyrinth[pp.getRow()][pp.getCol() + 1] != CellType.WALL) {
+                list.add(Direction.EAST);
+            }
         }
         return list;
     }
 
     @Override
     public void movePlayer(Direction direction) throws InvalidMoveException {
-
         if (!possibleMoves().contains(direction)) {
             throw new InvalidMoveException();
         } else {
@@ -143,13 +164,12 @@ public class LabyrinthImpl implements Labyrinth {
                 playerPosition = new Coordinate(playerPosition.getCol() - 1, playerPosition.getRow());
             }
             if (direction == Direction.NORTH) {
-                playerPosition = new Coordinate(playerPosition.getCol(), playerPosition.getRow() + 1);
-            }
-            if (direction == Direction.SOUTH) {
                 playerPosition = new Coordinate(playerPosition.getCol(), playerPosition.getRow() - 1);
             }
-
+            if (direction == Direction.SOUTH) {
+                playerPosition = new Coordinate(playerPosition.getCol(), playerPosition.getRow() + 1);
+            }
+//            System.out.println(playerPosition.getCol() + " - " + playerPosition.getRow());
         }
-
     }
 }
