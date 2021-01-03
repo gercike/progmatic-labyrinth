@@ -2,6 +2,7 @@ package com.progmatic.labyrinthproject.interfaces;
 
 import com.progmatic.labyrinthproject.enums.Direction;
 import com.progmatic.labyrinthproject.exceptions.CellException;
+import com.progmatic.labyrinthproject.exceptions.InvalidMoveException;
 
 /**
  *
@@ -16,6 +17,6 @@ public interface Player {
      * @return the player's next move. The returned direction should point to an EMTPY cell within l.
      * If the player has arrived on the END cell, it should return null.
      */
-    Direction nextMove(Labyrinth l) throws CellException;
+    Direction nextMove(Labyrinth l) throws CellException, InvalidMoveException;
 
 }

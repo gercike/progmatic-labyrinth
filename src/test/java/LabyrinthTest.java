@@ -4,10 +4,7 @@
  * and open the template in the editor.
  */
 
-import com.progmatic.labyrinthproject.Coordinate;
-import com.progmatic.labyrinthproject.LabyrinthImpl;
-import com.progmatic.labyrinthproject.LeftyWallFollowerPlayer;
-import com.progmatic.labyrinthproject.RandomPlayer;
+import com.progmatic.labyrinthproject.*;
 import com.progmatic.labyrinthproject.enums.CellType;
 import com.progmatic.labyrinthproject.enums.Direction;
 import com.progmatic.labyrinthproject.exceptions.CellException;
@@ -301,7 +298,7 @@ public class LabyrinthTest {
     public void testConsciousPlayer() throws Exception {
         Player cp = getConsciousPlayerImpl();
         
-        String[] files = {"labyrinth1.txt", "labyrinth2.txt", "labyrinth3.txt"};
+        String[] files = {"labyrinth1.txt", "labyrinth3.txt", "labyrinth3.txt"};
         for (String file : files) {
             Labyrinth l = getLabyrinthImpl();
             l.loadLabyrinthFile(file);
@@ -403,6 +400,7 @@ public class LabyrinthTest {
     
     // TODO
     private Player getConsciousPlayerImpl() {
-        return null;
+        ConsciousPlayer cp = new ConsciousPlayer();
+        return cp;
     }
 }

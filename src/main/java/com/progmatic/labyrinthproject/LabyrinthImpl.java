@@ -22,25 +22,6 @@ public class LabyrinthImpl implements Labyrinth {
     public LabyrinthImpl() {
     }
 
-    public static void main(String[] args) throws CellException {
-        LabyrinthImpl l = new LabyrinthImpl();
-        l.loadLabyrinthFile("labyrinth1.txt");
-        System.out.println("a játékos poz. oszlopszáma: " + l.getPlayerPosition().getCol());
-        System.out.println("a játékos poz. sorszáma: " + l.getPlayerPosition().getRow());
-        System.out.println("l szélessége: " + l.getWidth());
-        System.out.println("l magassága: " + l.getHeight());
-        Coordinate c1 = new Coordinate(0, 1);
-        System.out.println(l.getCellType(c1));
-        Coordinate c2 = new Coordinate(2, 3);
-        System.out.println(l.getCellType(c2));
-        Coordinate c3 = new Coordinate(3, 3);
-        l.setCellType(c3, CellType.WALL);
-        System.out.println(l.getCellType(c3));
-        l.playerPosition = c2;
-        System.out.println(l.hasPlayerFinished());
-        System.out.println(l.possibleMoves());
-    }
-
     @Override
     public void loadLabyrinthFile(String fileName) {
         try {
@@ -169,7 +150,6 @@ public class LabyrinthImpl implements Labyrinth {
             if (direction == Direction.SOUTH) {
                 playerPosition = new Coordinate(playerPosition.getCol(), playerPosition.getRow() + 1);
             }
-//            System.out.println(playerPosition.getCol() + " - " + playerPosition.getRow());
         }
     }
 }
