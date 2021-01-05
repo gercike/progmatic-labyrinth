@@ -7,18 +7,16 @@ import com.progmatic.labyrinthproject.exceptions.InvalidMoveException;
 import com.progmatic.labyrinthproject.interfaces.Labyrinth;
 import com.progmatic.labyrinthproject.interfaces.Player;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ConsciousPlayer implements Player {
     Labyrinth l;
-    ArrayDeque<Direction> theGoodpath;
+    Stack<Direction> theGoodPath;
+    Coordinate start;
 
     public static void main(String[] args) throws CellException, InvalidMoveException {
         LabyrinthImpl lab = new LabyrinthImpl();
-        lab.loadLabyrinthFile("labyrinth2.txt");
-//        System.out.println(lab.getHeight());
+        lab.loadLabyrinthFile("labyrinth1.txt");
         ConsciousPlayer cp = new ConsciousPlayer();
         cp.nextMove(lab);
     }
@@ -27,76 +25,65 @@ public class ConsciousPlayer implements Player {
     public Direction nextMove(Labyrinth l) throws CellException, InvalidMoveException {
         this.l = l;
         if (l.getCellType(l.getPlayerPosition()) == CellType.START) {
-            ArrayDeque<Direction> path = new ArrayDeque<>();
-            Coordinate miniPlayer = l.getPlayerPosition();
-            path.add(possibleVirtualMoves(miniPlayer).get(0));
-            findTheWayOut(path, miniPlayer);
+            theGoodPath = new Stack<>();
+            int[][] miniMap = new int[l.getHeight()][l.getHeight()];
+            start = l.getPlayerPosition();
+            findTheWayOutBFS(miniMap, start, 1, null);
         }
-//        System.out.println(path.size());
-//        System.out.println(theGoodpath);
-        return theGoodpath.remove();
+        return theGoodPath.pop();
     }
 
-    public void findTheWayOut(ArrayDeque<Direction> thePath, Coordinate miniPlayer) throws InvalidMoveException, CellException {
-        ArrayDeque<Direction> path0 = new ArrayDeque<>();
-        for (Direction direction : thePath) {
-            path0.add(direction);
+    Stack<Direction> getThePath(int[][] miniMap, Coordinate currentPosition) throws CellException {
+        int currentNumber = miniMap[currentPosition.getRow()][currentPosition.getCol()];
+        int targetNumber = currentNumber - 1;
+        if (targetNumber > 0) {
+            if (currentPosition.getRow() - 1 >= 0 && miniMap[currentPosition.getRow() - 1][currentPosition.getCol()] == targetNumber) {
+                theGoodPath.push(Direction.SOUTH);
+                Coordinate nextPosition = new Coordinate(currentPosition.getCol(), currentPosition.getRow() - 1);
+                return getThePath(miniMap, nextPosition);
+            }
+            if (currentPosition.getRow() < miniMap.length && miniMap[currentPosition.getRow() + 1][currentPosition.getCol()] == targetNumber) {
+                theGoodPath.push(Direction.NORTH);
+                Coordinate nextPosition = new Coordinate(currentPosition.getCol(), currentPosition.getRow() + 1);
+                return getThePath(miniMap, nextPosition);
+            }
+            if (currentPosition.getCol() - 1 >= 0 && miniMap[currentPosition.getRow()][currentPosition.getCol() - 1] == targetNumber) {
+                theGoodPath.push(Direction.EAST);
+                Coordinate nextPosition = new Coordinate(currentPosition.getCol() - 1, currentPosition.getRow());
+                return getThePath(miniMap, nextPosition);
+            }
+            if (currentPosition.getRow() < miniMap[0].length && miniMap[currentPosition.getRow()][currentPosition.getCol() + 1] == targetNumber) {
+                theGoodPath.push(Direction.WEST);
+                Coordinate nextPosition = new Coordinate(currentPosition.getCol() + 1, currentPosition.getRow());
+                return getThePath(miniMap, nextPosition);
+            }
         }
-        Coordinate miniPlayer0 = moveVirtualPlayer(path0.getLast(), miniPlayer);
-        if (hasVirtualPlayerFinished(miniPlayer0)) {
-            theGoodpath = path0;
+        return null;
+    }
+
+    public void findTheWayOutBFS(int[][] miniMap, Coordinate currentPosition, int numberOfSteps, Direction directionOfLastStep) throws CellException, InvalidMoveException {
+        miniMap[currentPosition.getRow()][currentPosition.getCol()] = numberOfSteps;
+        if (hasVirtualPlayerFinished(currentPosition)) {
+            theGoodPath = new Stack<>();
+            getThePath(miniMap, currentPosition);
         }
-        Direction oppositeOfPrevious = getOppositeDirectionOfLastStep(path0);
-        List<Direction> possibleMovesWithoutBacktracking = possibleVirtualMoves(miniPlayer0);
-        possibleMovesWithoutBacktracking.remove(oppositeOfPrevious);
-//        System.out.println(possibleMovesWithoutBacktracking);
+        List<Direction> possibleMovesWithoutBacktracking = possibleVirtualMoves(currentPosition);
+        if (l.getCellType(currentPosition) != CellType.START) {
+            Direction oppositeOfPrevious = getOppositeDirectionOfLastStep(directionOfLastStep);
+            possibleMovesWithoutBacktracking.remove(oppositeOfPrevious);
+        }
         int size = possibleMovesWithoutBacktracking.size();
-        if (size == 1) {
-            ArrayDeque<Direction> path1 = new ArrayDeque<>();
-            for (Direction direction : path0) {
-                path1.add(direction);
-            }
-            path1.add(possibleMovesWithoutBacktracking.get(0));
-            findTheWayOut(path1, miniPlayer0);
+        if (size > 0) {
+            Coordinate nextPosition = moveVirtualPlayer(possibleMovesWithoutBacktracking.get(0), currentPosition);
+            findTheWayOutBFS(miniMap, nextPosition, numberOfSteps + 1, possibleMovesWithoutBacktracking.get(0));
         }
-        if (size == 2) {
-            ArrayDeque<Direction> path1 = new ArrayDeque<>();
-            for (Direction direction : path0) {
-                path1.add(direction);
-            }
-            Coordinate miniPlayer1 = miniPlayer0;
-            path1.add(possibleMovesWithoutBacktracking.get(0));
-            findTheWayOut(path1, miniPlayer1);
-            ArrayDeque<Direction> path2 = new ArrayDeque<>();
-            for (Direction direction : path0) {
-                path2.add(direction);
-            }
-            Coordinate miniPlayer2 = miniPlayer0;
-            path2.add(possibleMovesWithoutBacktracking.get(1));
-            findTheWayOut(path2, miniPlayer2);
+        if (size > 1) {
+            Coordinate nextPosition = moveVirtualPlayer(possibleMovesWithoutBacktracking.get(1), currentPosition);
+            findTheWayOutBFS(miniMap, nextPosition, numberOfSteps + 1, possibleMovesWithoutBacktracking.get(1));
         }
-        if (size == 3) {
-            ArrayDeque<Direction> path1 = new ArrayDeque<>();
-            for (Direction direction : path0) {
-                path1.add(direction);
-            }
-            Coordinate miniPlayer1 = miniPlayer0;
-            path1.add(possibleMovesWithoutBacktracking.get(0));
-            findTheWayOut(path1, miniPlayer1);
-            ArrayDeque<Direction> path2 = new ArrayDeque<>();
-            for (Direction direction : path0) {
-                path2.add(direction);
-            }
-            Coordinate miniPlayer2 = miniPlayer0;
-            path2.add(possibleMovesWithoutBacktracking.get(1));
-            findTheWayOut(path2, miniPlayer2);
-            ArrayDeque<Direction> path3 = new ArrayDeque<>();
-            for (Direction direction : path0) {
-                path3.add(direction);
-            }
-            Coordinate miniPlayer3 = miniPlayer0;
-            path3.add(possibleMovesWithoutBacktracking.get(2));
-            findTheWayOut(path3, miniPlayer3);
+        if (size > 2) {
+            Coordinate nextPosition = moveVirtualPlayer(possibleMovesWithoutBacktracking.get(2), currentPosition);
+            findTheWayOutBFS(miniMap, nextPosition, numberOfSteps + 1, possibleMovesWithoutBacktracking.get(2));
         }
     }
 
@@ -148,9 +135,8 @@ public class ConsciousPlayer implements Player {
         return moveList;
     }
 
-    Direction getOppositeDirectionOfLastStep(ArrayDeque<Direction> path) {
-        Direction directionOfLastStep = path.getLast();
-        switch (directionOfLastStep) {
+    Direction getOppositeDirectionOfLastStep(Direction directionOfStep) {
+        switch (directionOfStep) {
             case SOUTH:
                 return Direction.NORTH;
             case WEST:
